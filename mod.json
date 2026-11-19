@@ -2,7 +2,7 @@
   "name": "LogicCommandBridge",
   "displayName": "Logic Command Bridge / 逻辑指挥桥",
   "author": "DeterMination",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "minGameVersion": 157,
   "description": "Bind a processor area with an RTS drag; every unit command is compiled into mlog and split across the processors. / 拖框自动铺处理器，RTS 控兵指令实时编译成 mlog 并分工执行。",
   "main": "logiccmd.LogicCommandMod",

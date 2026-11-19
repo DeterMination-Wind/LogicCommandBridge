@@ -40,18 +40,19 @@ RTS 控兵指令都会被实时编译成 mlog，覆写进这些处理器并立�
 ### 快速开始
 
 1. 从 [Releases](https://github.com/DeterMination-Wind/LogicCommandBridge/releases) 下载
-   `LogicCommandBridge-1.0.0.jar`（或同内容的 `.zip`），放进 Mindustry 的 `mods` 目录并启用。
+   最新的 `LogicCommandBridge-<version>.jar`（或同内容的 `.zip`），放进 Mindustry 的 `mods` 目录并启用。
 2. 在 `设置 → 控制` 绑定 `LCB: bind processor / command bridge`。
 3. 按该键，按住左键拖出一个矩形：模组会按处理器尺寸自动铺满。
 4. 框选单位 → 右键地面移动、右键敌方目标攻击。
 5. 可选：绑定 `LCB: previous formation` / `LCB: next formation` 快速切换编队。
+6. 一键解绑：绑定 `LCB: release formation from logic control`，按下后当前编队立刻脱离逻辑控制。
 
 ### 兼容性
 
 - 需要 Mindustry v157 或更高版本；MindustryX 可用。
 - 纯客户端模组，服务器不需要安装；多人下服务器需允许逻辑单位控制（`logicUnitControl`）。
 - 单人使用精确的单位寻址（注入单位常量）；多人使用位置匹配 + `flag` 标记复用。
-- 安卓请使用 Release 里的 `LogicCommandBridge-1.0.0.jar`（内含 `classes.dex`），
+- 安卓请使用 Release 里的 `LogicCommandBridge-<version>.jar`（内含 `classes.dex`），
   不要使用只含桌面 class 的中间构建。
 
 ### 功能说明
@@ -112,13 +113,15 @@ commandable logic headquarters.
 
 ### Quick start
 
-1. Download `LogicCommandBridge-1.0.0.jar` (or the identical `.zip`) from
+1. Download the latest `LogicCommandBridge-<version>.jar` (or the identical `.zip`) from
    [Releases](https://github.com/DeterMination-Wind/LogicCommandBridge/releases), put it into
    Mindustry's `mods` folder and enable it.
 2. Bind `LCB: bind processor / command bridge` in `Settings → Controls`.
 3. Press it, then hold left mouse and drag a rectangle: processors are laid out automatically.
 4. Select units → right-click ground to move, right-click an enemy target to attack.
 5. Optional: bind `LCB: previous formation` / `LCB: next formation` to switch groups quickly.
+6. One-key release: bind `LCB: release formation from logic control` to drop the current group out of
+   logic control immediately.
 
 ### Compatibility
 
@@ -127,7 +130,7 @@ commandable logic headquarters.
   (`logicUnitControl`).
 - Single player uses exact unit addressing (injected unit constants); multiplayer uses position
   matching plus `flag` token reuse.
-- On Android, use the release `LogicCommandBridge-1.0.0.jar` that contains `classes.dex`, not a
+- On Android, use the release `LogicCommandBridge-<version>.jar` that contains `classes.dex`, not a
   desktop-only or intermediate build.
 
 ### Feature details

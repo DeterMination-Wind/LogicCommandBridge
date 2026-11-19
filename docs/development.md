@@ -50,6 +50,9 @@ cd C:\Users\华硕\Documents\codex\LogicCommandBridge
 
 ## 约束
 
+- **设置项标签**必须写成 `setting.<prefKey>.name`，可选 `setting.<prefKey>.description`；
+  Mindustry 的 `SettingsTable` 只查这两个键，直接写 `logiccmd-xxx = ...` 会显示原始 key。
+- 滑条取值文本（如 `logiccmd.type.*`）由我们自己的 `StringProcessor` 读取，可以用普通键。
 - bundle 值里的 `{}` 必须成对：`Core.bundle.format` 走 `MessageFormat`，
   一个 `{0]` 这样的笔误就会抛 `Unmatched braces in the pattern` 并把游戏崩掉。
   `gradle buildMod` 会先跑 `checkBundles` 拦住这种错误。

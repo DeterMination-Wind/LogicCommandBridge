@@ -89,6 +89,10 @@ public final class LogicCommandFeature{
             hint("logiccmd.released");
         }
 
+        if(tapped(Cfg.keyUnbind)){
+            releaseLogicControl();
+        }
+
         if(tapped(Cfg.keyPreview)){
             showPreview();
         }
@@ -141,6 +145,61 @@ public final class LogicCommandFeature{
             ui.showInfoFade(Core.bundle.format("logiccmd.group.selected",
                 String.valueOf(index + 1), String.valueOf(UnitBook.units.size)));
         }
+    }
+
+    /** One-key release: writes an unbind program to every ready processor. */
+    private static void releaseLogicControl(){
+        Seq<Ports.Port> ready = Ports.readyPorts();
+        if(ready.isEmpty()){
+            fail(Ports.hasPorts() ? "noPort" : "need.pick");
+            return;
+        }
+        if(UnitBook.units.isEmpty()){
+            hint("logiccmd.unbind.empty");
+            return;
+        }
+
+        Seq<Unit> units = new Seq<>();
+        units.addAll(UnitBook.units);
+
+        Mlog.Gen gen = net.active()
+            ? Mlog.releaseFlags(typesOnly(units))
+            : Mlog.releaseExact(units);
+
+        int applied = 0;
+        for(int i = 0; i < ready.size; i++){
+            if(Injector.apply(ready.get(i), gen)) applied++;
+        }
+
+        if(applied == 0){
+            fail("noPort");
+            return;
+        }
+
+        int count = units.size;
+        UnitBook.clear();
+
+        if(Cfg.hints && ui != null){
+            ui.showInfoFade(Core.bundle.format("logiccmd.unbound", String.valueOf(count)));
+        }
+        if(Cfg.debug){
+            arc.util.Log.info("[LCB] release: @ units across @ processor(s)", count, applied);
+        }
+    }
+
+    /** Groups with only type/count information, for release sweeps. */
+    private static Seq<Mlog.TypeGroup> typesOnly(Seq<Unit> units){
+        Seq<Mlog.TypeGroup> groups = new Seq<>();
+        for(int i = 0; i < units.size; i++){
+            Unit unit = units.get(i);
+            if(groupByName(groups, unit.type.name) != null) continue;
+
+            Mlog.TypeGroup group = new Mlog.TypeGroup();
+            group.name = unit.type.name;
+            group.teamCount = UnitBook.teamCount(unit.type);
+            groups.add(group);
+        }
+        return groups;
     }
 
     /** Clears transient state on world load. */

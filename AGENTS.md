@@ -60,6 +60,8 @@ gradle dist         # 再复制到 dist\
 一个 `{0]` 之类的笔误会抛 `Unmatched braces in the pattern` 并直接崩游戏，
 `checkBundles` 会在构建期拦住它，不要绕过。
 
+设置项标签必须用 `setting.<prefKey>.name`（可选 `.description`）；直接写 pref key 会显示原始键名。
+
 ## 提交与文档
 
 - 提交信息前缀 `LogicCommandBridge: ...`，或 `feat:` / `fix:` / `docs:` / `build:`。

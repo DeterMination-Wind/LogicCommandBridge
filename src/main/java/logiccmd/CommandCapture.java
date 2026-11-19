@@ -36,7 +36,7 @@ public final class CommandCapture implements InputProcessor{
 
         if(Ports.picking){
             if(button == KeyCode.mouseLeft){
-                Tile tile = tileAt(screenX, screenY);
+                Tile tile = Ports.mouseTile();
                 if(tile != null) Ports.beginDrag(tile.x, tile.y);
                 return true;
             }
@@ -74,8 +74,8 @@ public final class CommandCapture implements InputProcessor{
         if(!Ports.picking) return false;
         if(button != KeyCode.mouseLeft) return false;
 
-        Tile tile = tileAt(screenX, screenY);
-        if(tile != null) Ports.updateDrag(tile.x, tile.y);
+        // Ignore the event coordinates: reuse the cursor position the preview was drawn from,
+        // otherwise the placed grid can end up offset from the box the player saw.
         Ports.finishDrag();
         return true;
     }
@@ -84,14 +84,9 @@ public final class CommandCapture implements InputProcessor{
     public boolean touchDragged(int screenX, int screenY, int pointer){
         if(!Ports.picking || !Ports.dragging) return false;
 
-        Tile tile = tileAt(screenX, screenY);
+        Tile tile = Ports.mouseTile();
         if(tile != null) Ports.updateDrag(tile.x, tile.y);
         return true;
-    }
-
-    private static Tile tileAt(int screenX, int screenY){
-        Vec2 pos = Core.input.mouseWorld(screenX, screenY);
-        return world.tileWorld(pos.x, pos.y);
     }
 
     // Arc's InputProcessor methods are default on desktop but stay abstract on some

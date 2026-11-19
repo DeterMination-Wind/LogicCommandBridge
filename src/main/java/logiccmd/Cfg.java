@@ -33,6 +33,7 @@ public final class Cfg{
 
     public static KeyBind keyBind;
     public static KeyBind keyRelease;
+    public static KeyBind keyUnbind;
     public static KeyBind keyPreview;
     public static KeyBind keyPrevGroup;
     public static KeyBind keyNextGroup;
@@ -71,7 +72,7 @@ public final class Cfg{
     public static void load(){
         applyDefaults();
 
-        processorType = clamp(Core.settings.getInt(K_TYPE, 0), 0, 2);
+        processorType = clamp(Core.settings.getInt(K_TYPE, 0), 0, 3);
         autoBuild = Core.settings.getBool(K_AUTO_BUILD, true);
         hold = Core.settings.getBool(K_HOLD, true);
         swallow = Core.settings.getBool(K_SWALLOW, false);
@@ -121,6 +122,7 @@ public final class Cfg{
 
         keyBind = KeyBind.add("logiccmd-bind", KeyCode.unset, "logiccmd");
         keyRelease = KeyBind.add("logiccmd-release", KeyCode.unset, "logiccmd");
+        keyUnbind = KeyBind.add("logiccmd-unbind", KeyCode.unset, "logiccmd");
         keyPreview = KeyBind.add("logiccmd-preview", KeyCode.unset, "logiccmd");
         keyPrevGroup = KeyBind.add("logiccmd-prev-group", KeyCode.unset, "logiccmd");
         keyNextGroup = KeyBind.add("logiccmd-next-group", KeyCode.unset, "logiccmd");
@@ -128,6 +130,7 @@ public final class Cfg{
 
     /** Processor block used for new ports. */
     public static Block processorBlock(){
+        if(processorType == 3) return Blocks.worldProcessor;
         if(processorType == 2) return Blocks.hyperProcessor;
         if(processorType == 1) return Blocks.logicProcessor;
         return Blocks.microProcessor;
@@ -136,7 +139,7 @@ public final class Cfg{
     public static void buildSettings(SettingsMenuDialog.SettingsTable table){
         load();
 
-        table.sliderPref(K_TYPE, processorType, 0, 2,
+        table.sliderPref(K_TYPE, processorType, 0, 3,
             i -> Core.bundle.get("logiccmd.type." + i),
             i -> processorType = i);
         table.checkPref(K_AUTO_BUILD, autoBuild, b -> autoBuild = b);

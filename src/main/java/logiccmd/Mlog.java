@@ -188,6 +188,67 @@ public final class Mlog{
 
     // endregion
 
+    // region release (unbind current formation)
+
+    /** One-shot release for the current book in single player. */
+    public static Gen releaseExact(Seq<Unit> units){
+        Gen gen = new Gen();
+        gen.kind = "release";
+        gen.exact = true;
+        gen.units.addAll(units);
+        gen.count = units.size;
+
+        StringBuilder s = new StringBuilder();
+        for(int i = 0; i < units.size; i++){
+            s.append("ubind lc_u").append(i).append('\n');
+            s.append("ucontrol unbind\n");
+        }
+        s.append("stop\n");
+
+        gen.code = s.toString();
+        gen.instructions = countInstructions(gen.code);
+        gen.matchInstructions = gen.instructions;
+        return gen;
+    }
+
+    /** One-shot release for multiplayer: clear our flags and unbind, per unit type. */
+    public static Gen releaseFlags(Seq<TypeGroup> groups){
+        Gen gen = new Gen();
+        gen.kind = "release";
+
+        StringBuilder s = new StringBuilder();
+        for(int t = 0; t < groups.size; t++){
+            TypeGroup group = groups.get(t);
+            if(group.teamCount <= 0) continue;
+
+            s.append("set lc_i 0\n");
+            s.append("rel").append(t).append(":\n");
+            s.append("ubind @").append(group.name).append('\n');
+            s.append("jump ren").append(t).append(" equal @unit null\n");
+            s.append("sensor lc_f @unit @flag\n");
+            s.append("jump rnx").append(t).append(" lessThan lc_f ").append(TOKEN_MIN).append('\n');
+            s.append("jump rnx").append(t).append(" greaterThanEq lc_f ")
+                .append(TOKEN_MIN + TOKEN_SPAN).append('\n');
+            // Clear the token first: after unbind the unit is no longer logic-controllable.
+            s.append("ucontrol flag 0\n");
+            s.append("ucontrol unbind\n");
+            s.append("rnx").append(t).append(":\n");
+            s.append("op add lc_i lc_i 1\n");
+            s.append("jump rel").append(t).append(" lessThan lc_i ")
+                .append(Math.max(1, group.teamCount)).append('\n');
+            s.append("ren").append(t).append(":\n");
+        }
+        s.append("stop\n");
+
+        gen.count = totalUnits(groups);
+        gen.code = s.toString();
+        gen.instructions = countInstructions(gen.code);
+        gen.matchInstructions = gen.instructions;
+        return gen;
+    }
+
+    // endregion
+
     // region multiplayer (position match + flag token)
 
     /** First move command of a group: cleanup, match + tag + order, hold, release. */

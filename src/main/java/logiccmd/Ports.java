@@ -208,10 +208,11 @@ public final class Ports{
     }
 
     /** @return null when the tile can host the given processor, otherwise an error code. */
-    public static String check(int x, int y, Block block){
-        if(state == null || !state.isGame()) return "notPlaying";
+    public static String check(int x, int y, Block block){        if(state == null || !state.isGame()) return "notPlaying";
         if(player == null || player.dead() || player.unit() == null) return "noPlayer";
         if(block == null) return "noBlock";
+        if(block.privileged && !worldProcessorAllowed()) return "worldLocked";
+        if(block.privileged && state.rules.disableWorldProcessors) return "worldDisabled";
         if(block.isBanned()) return "blockBanned";
         if(!block.unlockedNow()) return "blockLocked";
         if(!block.environmentBuildable()) return "badEnv";
@@ -234,6 +235,17 @@ public final class Ports{
         }
 
         return null;
+    }
+
+    /** Tile under the mouse, using the live cursor instead of event coordinates. */
+    public static Tile mouseTile(){
+        return world.tileWorld(Core.input.mouseWorldX(), Core.input.mouseWorldY());
+    }
+
+    /** World processors need editor mode or the allowEditWorldProcessors rule. */
+    public static boolean worldProcessorAllowed(){
+        return state != null && (state.rules.editor || state.playtestingMap != null
+            || state.rules.allowEditWorldProcessors);
     }
 
     /** Updates the drag preview from the current mouse tile. */

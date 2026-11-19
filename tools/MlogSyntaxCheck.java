@@ -49,6 +49,10 @@ public class MlogSyntaxCheck{
             2f, 0.8f, 2f, true, true).code);
         Cfg.pathfind = true;
 
+        // ---- release programs ----
+        check("sp releaseExact", Mlog.releaseExact(units).code);
+        check("mp releaseFlags", Mlog.releaseFlags(fakeGroups(false)).code);
+
         // ---- one shot mode (no hold loop) ----
         Cfg.hold = false;
         check("sp moveExact(one-shot)", Mlog.moveExact(units, dests, 0.8f, 2f).code);

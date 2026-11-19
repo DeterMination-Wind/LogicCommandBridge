@@ -132,6 +132,23 @@ done:
 处理器放置遵循原版规则：`Build.validPlace` + 建造范围 + 未 ban/未锁定；放不下的格子会跳过，
 最后提示“绑定 N 台、跳过 M 台”。
 
+### 一键解绑
+
+`LCB: release formation from logic control` 会向每台就绪处理器写入一段一次性程序：
+
+- 单机：`ubind lc_uN` + `ucontrol unbind`（注入当前编队全部单位）；
+- 多人：按类型扫描 `[1e9, 2e9)` 区间内的 flag，先 `ucontrol flag 0` 再 `ucontrol unbind`
+  （先清标记再解绑，因为解绑后单位就不再受逻辑控制，清不了标记）；
+- 程序以 `stop` 结束，替换掉原来的保持循环，所以不会被重新接管。
+
+### 世界处理器
+
+处理器类型新增“世界处理器（1x1）”（`privileged`）：
+
+- 仅 `rules.editor` / 编辑测试 / `rules.allowEditWorldProcessors` 时允许放置与执行；
+- `rules.disableWorldProcessors` 为真时直接拒绝；
+- 默认 `ipt = 8`，`@range` 无限，适合当全局指令中枢。
+
 ## 关键限制
 
 - `ucontrol` 会把单位变成 `LogicAI`，`logicControlTimeout` 约 10 秒后 `resetController()`
