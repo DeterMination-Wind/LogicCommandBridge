@@ -24,7 +24,8 @@ gradle buildMod       # 生成 codex\构建\LogicCommandBridge\LogicCommandBridg
 gradle dist           # 额外复制到 dist\
 ```
 
-开发构建固定为 `version = "0.0.0"`、`name = "LogicCommandBridge-dev"`。
+开发构建固定为 `version = "0.0.0"`、`name = "LogicCommandBridge-dev"`；本仓库当前为
+**v1.0.0 发布身份**（`LogicCommandBridge` / `1.0.0`），改版本时两者要同步。
 `buildMod` 会自动跑 bundle 花括号校验与 D8，一个 jar 同时支持桌面与 Android。
 
 ## 使用

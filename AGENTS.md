@@ -30,7 +30,8 @@ gradle dist         # 再复制到 dist\
 
 - 编译依赖自动优先使用 `../MindustryX-main/work/core/build/libs/core-release.jar`，
   其次 `../Mindustry-master/...`，最后 JitPack。Arc 来自 `../Arc/arc-core/build/libs/arc-core-1.0.jar`。
-- 本地开发固定 `version = "0.0.0"`、`name = "LogicCommandBridge-dev"`；不要提前改成正式版本。
+- 本地开发固定 `version = "0.0.0"`、`name = "LogicCommandBridge-dev"`；当前仓库为 v1.0.0
+  发布身份（`LogicCommandBridge` / `1.0.0`），发布前先本地构建验证再打 tag。
 - 测试安装位置：`%APPDATA%\Mindustry\mods\LogicCommandBridge-dev.jar`。
 
 ## 代码约束

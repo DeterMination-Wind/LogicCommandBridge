@@ -7,6 +7,9 @@
 - `mod.json` / `mod.hjson`：`name = "LogicCommandBridge-dev"`、`version = "0.0.0"`。
 - 产物：`codex\构建\LogicCommandBridge\LogicCommandBridge-dev.jar`（`gradle buildMod` 生成）。
 
+**当前仓库状态**：已发布 `v1.0.0`（`name = "LogicCommandBridge"`、`version = "1.0.0"`，
+产物 `LogicCommandBridge-1.0.0.jar`）。再次发布时把三处版本号一起改，并在 tag 前先本地构建验证。
+
 ## 正式发布时
 
 1. 改 `build.gradle` 的 `version`，以及 `mod.json` / `mod.hjson` 的 `version` 与 `name`
