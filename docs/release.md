@@ -13,12 +13,15 @@
 ## 正式发布时
 
 1. 改 `build.gradle` 的 `version`，以及 `mod.json` / `mod.hjson` 的 `version` 与 `name`
-   （去掉 `-dev` 后缀），重跑 `gradle buildMod dist`。
-2. 产物结构：根目录含 `mod.json` 与 `mod.hjson`、`logiccmd/**.class`、`bundles/bundle*.properties`，
-   以及 Android 用的 `classes.dex`（由 `dexAndroid` 生成并打进同一个 jar）。
-3. 一个 jar 同时给桌面和 Android 用，不要额外发布 `*-android.jar` / `*-desktop.jar`。
-4. GitHub Release 只允许一个 `.jar` 资产（Mindustry 安装器取第一个 `.jar`）。
-5. 发布后查询 release assets 确认只有一个可安装 jar，且该 jar 内含 `classes.dex`。
+   （去掉 `-dev` 后缀），重跑 `gradle clean buildMod zipMod dist distZip`。
+2. 改写 `RELEASE_NOTES.md`：参考 Neon 的格式——
+   `> [!NOTE]` 双语系统要求，然后 `## 中文` / `## English` 两节，条目加粗。
+   发布正文直接用它：`gh release edit vX.Y.Z --notes-file RELEASE_NOTES.md`。
+3. 产物结构：根目录含 `mod.json` 与 `mod.hjson`、`logiccmd/**.class`、`bundles/bundle*.properties`，
+   以及 Android 用的 `classes.dex`（由 `dexAndroid` 生成并打进同一个 jar / zip）。
+4. 资产：**1 个 jar + 1 个 zip**（内容相同），jar 供游戏内安装器使用；不要额外发布
+   `*-android.jar` / `*-desktop.jar` 等中间产物（Mindustry 安装器只取第一个 `.jar`）。
+5. 发布后查询 release assets 确认只有一个 `.jar`，且该 jar 内含 `classes.dex`。
 
 ## 可选：发到 QQ 群
 

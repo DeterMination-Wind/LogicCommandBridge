@@ -306,4 +306,34 @@ tasks.register("dist", Copy) {
     doNotTrackState("Convenience copy for release artifacts.")
 }
 
+// Optional zip variant (same content as the jar), matching Neon's release asset set.
+tasks.register("zipMod", Zip) {
+    group = "build"
+    description = "Builds the installable mod zip (same content as the jar)."
+    dependsOn tasks.named("classes")
+    dependsOn tasks.named("dexAndroid")
+
+    archiveFileName = artifactFileName.replace(".jar", ".zip")
+    destinationDirectory = new File(rootDir, "../构建/${modName}")
+
+    from(sourceSets.main.output)
+    from(d8OutDir) {
+        include "classes.dex"
+    }
+    from(projectDir) {
+        include "mod.json"
+        include "mod.hjson"
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.register("distZip", Copy) {
+    group = "build"
+    description = "Copies the installable mod zip into dist/."
+    dependsOn tasks.named("zipMod")
+    from(tasks.named("zipMod").flatMap { it.archiveFile })
+    into(new File(projectDir, "dist"))
+    doNotTrackState("Convenience copy for release artifacts.")
+}
+
 // endregion

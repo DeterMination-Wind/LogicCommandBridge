@@ -19,7 +19,8 @@ Arc 来自 `../Arc/arc-core/build/libs/arc-core-1.0.jar`。
 cd C:\Users\华硕\Documents\codex\LogicCommandBridge
 gradle classes                     # 快速编译
 gradle buildMod                    # 生成 codex\构建\LogicCommandBridge\LogicCommandBridge-dev.jar（含 classes.dex）
-gradle dist                        # 再复制一份到 dist\
+gradle zipMod                      # 同上内容的 .zip（可选，发布时用）
+gradle dist distZip                # 复制 jar / zip 到 dist\
 gradle dexAndroid                  # 只跑 D8
 gradle clean
 ```
