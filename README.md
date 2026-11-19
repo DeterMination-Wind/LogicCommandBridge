@@ -1,48 +1,155 @@
-# Logic Command Bridge / 逻辑指挥桥
+# Logic Command Bridge / 逻辑指挥桥 (Mindustry Mod)
 
-Mindustry 客户端模组：把玩家框选后的 RTS 控兵指令实时编译成 mlog，覆写进指定处理器并立即执行。
+<h1 align="center">
+  <a href="https://github.com/DeterMination-Wind/LogicCommandBridge/releases/latest"><img src="https://img.shields.io/github/v/release/DeterMination-Wind/LogicCommandBridge?display_name=release&label=Latest%20Release&color=green"></a>
+  <a href="https://github.com/DeterMination-Wind/LogicCommandBridge/releases"><img src="https://img.shields.io/github/downloads/DeterMination-Wind/LogicCommandBridge/total?label=Downloads&color=blue"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/DeterMination-Wind/LogicCommandBridge?label=License"></a>
+  <a href="https://github.com/DeterMination-Wind/LogicCommandBridge"><img src="https://img.shields.io/github/stars/DeterMination-Wind/LogicCommandBridge?style=flat&label=Star%20this%20mod!&color=yellow"></a>
+</h1>
 
-- 先按快捷键点选一个格子，模组会在那里放置（或复用）一台处理器作为“端口”。
-- 之后每次右键控兵：移动 / 攻击 都会被翻译成 mlog，程序以 `stop` 收尾。
-- 默认“保持到抵达”：循环下发 `ucontrol`，避免 10 秒 LogicAI 超时导致长途移动半路停下。
-- 单位被逻辑接管后无法再框选，因此模组自己维护编队；空框选时复用上一批单位。
-- 移动途中再右键，会**整段覆写并重启处理器**，单位立刻改向；同一编队的后续指令走
-  “标记复用”路径（多人下不再重新匹配）。
-- **到达即释放**：指令结束时 `ucontrol unbind`，单位立刻可被 RTS 操控。
-- **寻路 + 地形适配**：`ucontrol pathfind` 绕地形；海军/陆军/空军分别夹到最近可站立点，
-  海军打岸上目标也能开到最近水面开火。
-- **两种到达形态**：挤在目标点，或走成方阵（设置里切换）。
-- **边走边打**：移动时用 `uradar` 自动索敌最近的敌方单位并开火（建筑不会自动索敌，需右键指定）。
-- **编队切换快捷键**：上一个/下一个编队，切换后地图上高亮当前编队单位。
+> [!NOTE]
+> 有问题或建议请发到 bugsoc@qq.com / If you have any feedback, please send it to bugsoc@qq.com
 
-## 构建
+- [中文](#中文)
+- [English](#english)
+
+## 中文
+
+> 把 RTS 控兵变成逻辑：拖框铺处理器，右键即下令。
+
+### Logic Command Bridge 是什么
+
+Logic Command Bridge 是 Mindustry 的客户端模组：先拖框让模组自动铺一组处理器，之后每一次
+RTS 控兵指令都会被实时编译成 mlog，覆写进这些处理器并立即执行。
+
+它解决的是原版一个很具体的空白：单位一旦被逻辑接管，就不能再被框选和指挥。这个模组把
+“框选 → 右键”重新接到逻辑上，并且支持把部队切片、分摊到多台处理器并行执行。
+
+它不新增方块、单位或资源，只是把玩家已有的处理器变成可指挥的“逻辑指挥部”。
+
+### 为什么使用它
+
+- **逻辑单位重新可控**：被处理器接管的单位也能用框选 + 右键指挥，不用再改代码。
+- **多处理器分工**：拖框自动铺满处理器，部队按 `i % N` 切片，总吞吐是各处理器 `ipt` 之和。
+- **命令即时生效**：移动途中再右键立刻转向；到达后 `uncontrol unbind` 立即恢复可指挥。
+- **地形与兵种适配**：`pathfind` 绕开地形，海军 / 陆军 / 空军分别夹到最近可站立点，
+  海军打岸上目标会开到最近水面开火。
+- **边走边打**：移动中自动索敌最近的敌方单位并开火（建筑需右键指定）。
+- **适合 RTS 习惯**：到达形态可选“挤在一起 / 方阵”，编队可用快捷键切换并高亮。
+
+### 快速开始
+
+1. 从 [Releases](https://github.com/DeterMination-Wind/LogicCommandBridge/releases) 下载
+   `LogicCommandBridge-1.0.0.jar`（或同内容的 `.zip`），放进 Mindustry 的 `mods` 目录并启用。
+2. 在 `设置 → 控制` 绑定 `LCB: bind processor / command bridge`。
+3. 按该键，按住左键拖出一个矩形：模组会按处理器尺寸自动铺满。
+4. 框选单位 → 右键地面移动、右键敌方目标攻击。
+5. 可选：绑定 `LCB: previous formation` / `LCB: next formation` 快速切换编队。
+
+### 兼容性
+
+- 需要 Mindustry v157 或更高版本；MindustryX 可用。
+- 纯客户端模组，服务器不需要安装；多人下服务器需允许逻辑单位控制（`logicUnitControl`）。
+- 单人使用精确的单位寻址（注入单位常量）；多人使用位置匹配 + `flag` 标记复用。
+- 安卓请使用 Release 里的 `LogicCommandBridge-1.0.0.jar`（内含 `classes.dex`），
+  不要使用只含桌面 class 的中间构建。
+
+### 功能说明
+
+完整功能、设置项和术语见 [docs/](docs/README.md)；发布说明见 [RELEASE_NOTES.md](RELEASE_NOTES.md)。
+
+### 反馈
+
+- 邮箱：bugsoc@qq.com
+
+### 开发者构建
+
+在项目目录执行：
 
 ```powershell
-cd C:\Users\华硕\Documents\codex\LogicCommandBridge
-gradle classes        # 仅编译
-gradle buildMod       # 生成 codex\构建\LogicCommandBridge\LogicCommandBridge-dev.jar（含 classes.dex）
-gradle dist           # 额外复制到 dist\
+.\gradlew.bat clean buildMod zipMod dist distZip
 ```
 
-开发构建固定为 `version = "0.0.0"`、`name = "LogicCommandBridge-dev"`；本仓库当前为
-**v1.0.0 发布身份**（`LogicCommandBridge` / `1.0.0`），改版本时两者要同步。
-`buildMod` 会自动跑 bundle 花括号校验与 D8，一个 jar 同时支持桌面与 Android。
+主要产物：
 
-## 使用
+- `dist/LogicCommandBridge-<version>.jar`
+- `dist/LogicCommandBridge-<version>.zip`
+- `../构建/LogicCommandBridge/LogicCommandBridge-<version>.jar`
+- `../构建/LogicCommandBridge/LogicCommandBridge-<version>.zip`
 
-1. 设置 → 控制 → 绑定 `LCB: bind processor / command bridge`（默认未绑定）。
-2. 按该键 → **按住左键拖出一个矩形** → 模组自动在矩形内铺处理器（微型/中型/大型，数量上限见设置）→ 松开完成。
-3. 框选可指挥单位 → 右键地面 = 移动到该点（带编队落点）；右键敌方建筑/单位 = 攻击。
-4. 再次右键可继续下令（编队会自动沿用，直到你重新框选或按“释放编队”）。
-5. 用“上一个编队 / 下一个编队”快捷键在原版控制组之间切换；当前编队的单位会被高亮圈出。
+## English
 
-多台处理器会**分摊部队**：每个处理器只负责自己那一份单位，总吞吐 = 各处理器 `ipt` 之和。
+> Turn RTS commands into logic: drag a processor area, right-click to command.
 
-## 文档
+### What is Logic Command Bridge?
 
-- [docs/README.md](docs/README.md)
-- [docs/architecture.md](docs/architecture.md)
-- [docs/development.md](docs/development.md)
-- [docs/release.md](docs/release.md)
-- [docs/testing.md](docs/testing.md)
-- [docs/glossary.md](docs/glossary.md)
+Logic Command Bridge is a client-side Mindustry mod. Drag a rectangle and it lays out a group of
+processors for you; from then on every RTS unit command is compiled into mlog, written into those
+processors and executed immediately.
+
+It fills one specific gap in vanilla: once a unit is taken over by logic, it can no longer be
+box-selected or commanded. This mod reconnects "drag-select → right-click" to logic, and can split
+the army across multiple processors for parallel execution.
+
+It adds no blocks, units or resources; it turns the processors you already build into a
+commandable logic headquarters.
+
+### Why use it?
+
+- **Logic units become commandable again**: box-select and right-click units that a processor took
+  over, without editing any code.
+- **Multi-processor dispatch**: a drag lays out processors automatically, units are sliced by
+  `i % N`, and total throughput is the sum of every processor's `ipt`.
+- **Commands apply immediately**: right-click again mid-move to turn instantly; `ucontrol unbind`
+  on arrival restores RTS control right away.
+- **Terrain and unit-type aware**: `pathfind` routes around terrain, and naval / ground / air units
+  are clamped to their nearest reachable tile — a navy group ordered onto land shells from the
+  nearest water instead of standing still.
+- **Attack-move**: while moving, units auto-acquire the nearest enemy unit (buildings need an
+  explicit attack order).
+- **Built for RTS habits**: choose "crowd the target" or "keep a grid", and switch formations with
+  hotkeys while the active group is highlighted.
+
+### Quick start
+
+1. Download `LogicCommandBridge-1.0.0.jar` (or the identical `.zip`) from
+   [Releases](https://github.com/DeterMination-Wind/LogicCommandBridge/releases), put it into
+   Mindustry's `mods` folder and enable it.
+2. Bind `LCB: bind processor / command bridge` in `Settings → Controls`.
+3. Press it, then hold left mouse and drag a rectangle: processors are laid out automatically.
+4. Select units → right-click ground to move, right-click an enemy target to attack.
+5. Optional: bind `LCB: previous formation` / `LCB: next formation` to switch groups quickly.
+
+### Compatibility
+
+- Requires Mindustry v157 or later; works with MindustryX.
+- Fully client-side; servers do not need it. Multiplayer servers must allow logic unit control
+  (`logicUnitControl`).
+- Single player uses exact unit addressing (injected unit constants); multiplayer uses position
+  matching plus `flag` token reuse.
+- On Android, use the release `LogicCommandBridge-1.0.0.jar` that contains `classes.dex`, not a
+  desktop-only or intermediate build.
+
+### Feature details
+
+See [docs/](docs/README.md) for the full feature guide, settings and terminology; release notes are
+in [RELEASE_NOTES.md](RELEASE_NOTES.md).
+
+### Feedback
+
+- Email: bugsoc@qq.com
+
+### Development
+
+From the project directory:
+
+```powershell
+.\gradlew.bat clean buildMod zipMod dist distZip
+```
+
+Main outputs:
+
+- `dist/LogicCommandBridge-<version>.jar`
+- `dist/LogicCommandBridge-<version>.zip`
+- `../构建/LogicCommandBridge/LogicCommandBridge-<version>.jar`
+- `../构建/LogicCommandBridge/LogicCommandBridge-<version>.zip`

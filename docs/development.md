@@ -17,12 +17,12 @@ Arc 来自 `../Arc/arc-core/build/libs/arc-core-1.0.jar`。
 
 ```powershell
 cd C:\Users\华硕\Documents\codex\LogicCommandBridge
-gradle classes                     # 快速编译
-gradle buildMod                    # 生成 codex\构建\LogicCommandBridge\LogicCommandBridge-dev.jar（含 classes.dex）
-gradle zipMod                      # 同上内容的 .zip（可选，发布时用）
-gradle dist distZip                # 复制 jar / zip 到 dist\
-gradle dexAndroid                  # 只跑 D8
-gradle clean
+.\gradlew.bat classes                 # 快速编译
+.\gradlew.bat buildMod                # 生成 codex\构建\LogicCommandBridge\LogicCommandBridge-dev.jar（含 classes.dex）
+.\gradlew.bat zipMod                  # 同上内容的 .zip（可选，发布时用）
+.\gradlew.bat dist distZip            # 复制 jar / zip 到 dist\
+.\gradlew.bat dexAndroid              # 只跑 D8
+.\gradlew.bat clean
 ```
 
 - `buildMod` 会自动执行 `checkBundles`（bundle 花括号校验）与 `dexAndroid`（D8）。
