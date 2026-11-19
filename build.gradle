@@ -1,0 +1,309 @@
+plugins {
+    id "java"
+}
+
+group = "logiccmd"
+version = "0.0.0"
+
+def modName = "LogicCommandBridge"
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+repositories {
+    mavenCentral()
+    maven { url "https://jitpack.io" }
+}
+
+// Prefer the local checkouts that are actually used for testing on this machine:
+//   ../MindustryX-main/work/core/build/libs/core-release.jar  (MindustryX client build)
+//   ../Mindustry-master/core/build/libs/core-release.jar      (upstream Mindustry build)
+//   ../Arc/arc-core/build/libs/arc-core-1.0.jar
+// Fall back to JitPack when none of them exist.
+def mindustryXCore = new File(rootDir.parentFile, "MindustryX-main/work/core/build/libs/core-release.jar")
+def mindustryCore = new File(rootDir.parentFile, "Mindustry-master/core/build/libs/core-release.jar")
+def arcCore = new File(rootDir.parentFile, "Arc/arc-core/build/libs/arc-core-1.0.jar")
+
+dependencies {
+    if (mindustryXCore.exists()) {
+        compileOnly files(mindustryXCore)
+    } else if (mindustryCore.exists()) {
+        compileOnly files(mindustryCore)
+    } else {
+        compileOnly("com.github.Anuken.MindustryJitpack:core:v154.3") {
+            exclude group: "com.github.Anuken.Arc"
+        }
+    }
+
+    if (arcCore.exists()) {
+        compileOnly files(arcCore)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+    if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_1_9)) {
+        options.release.set(8)
+    }
+}
+
+tasks.withType(Jar).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+def isDevBuild = project.version.toString() == "0.0.0"
+def artifactFileName = isDevBuild ? "${modName}-dev.jar" : "${modName}-${project.version}.jar"
+def isWindows = System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows")
+
+// region android dex packaging
+
+def findD8 = {
+    def explicit = System.getenv("D8_PATH")
+    if (explicit) {
+        def f = new File(explicit)
+        if (f.exists()) return f
+    }
+
+    def toolName = isWindows ? "d8.bat" : "d8"
+
+    def sdkRoots = []
+    def sdkEnv = System.getenv("ANDROID_SDK_ROOT") ?: System.getenv("ANDROID_HOME")
+    if (sdkEnv) sdkRoots << new File(sdkEnv)
+    sdkRoots << new File(rootDir.parentFile, "android-sdk-codex")
+    sdkRoots << new File(rootDir.parentFile.parentFile, "android-sdk-codex")
+    sdkRoots << new File(System.getProperty("user.home"), "AppData/Local/Android/Sdk")
+
+    for (def sdk : sdkRoots) {
+        def buildTools = new File(sdk, "build-tools")
+        if (!buildTools.isDirectory()) continue
+        def candidates = (buildTools.listFiles() ?: [])
+            .findAll { it.isDirectory() }
+            .sort { a, b -> b.name <=> a.name }
+        for (def dir : candidates) {
+            def exe = new File(dir, toolName)
+            if (exe.exists()) return exe
+        }
+    }
+
+    // Workspace-local cmdline-tools layout (Documents/commandlinetools-win-*/cmdline-tools/bin/d8.bat)
+    def cmdline = ((rootDir.parentFile.listFiles() ?: []) + (rootDir.parentFile.parentFile.listFiles() ?: []))
+        .findAll { it.isDirectory() && it.name.startsWith("commandlinetools-win-") }
+        .sort { a, b -> b.name <=> a.name }
+    for (def dir : cmdline) {
+        def exe = new File(dir, "cmdline-tools/bin/" + toolName)
+        if (exe.exists()) return exe
+    }
+
+    return null
+}
+
+def findAndroidJar = {
+    def sdkRoots = []
+    def sdkEnv = System.getenv("ANDROID_SDK_ROOT") ?: System.getenv("ANDROID_HOME")
+    if (sdkEnv) sdkRoots << new File(sdkEnv)
+    sdkRoots << new File(rootDir.parentFile, "android-sdk-codex")
+    sdkRoots << new File(rootDir.parentFile.parentFile, "android-sdk-codex")
+    sdkRoots << new File(System.getProperty("user.home"), "AppData/Local/Android/Sdk")
+
+    for (def sdk : sdkRoots) {
+        def platforms = new File(sdk, "platforms")
+        if (!platforms.isDirectory()) continue
+        def dirs = (platforms.listFiles() ?: [])
+            .findAll { it.isDirectory() && new File(it, "android.jar").exists() }
+            .sort { a, b -> b.name <=> a.name }
+        if (!dirs.isEmpty()) return new File(dirs[0], "android.jar")
+    }
+    return null
+}
+
+def d8OutDir = layout.buildDirectory.dir("d8").get().asFile
+
+tasks.register("d8InputJar", Jar) {
+    group = "build"
+    description = "Builds the temporary input jar used by D8."
+    dependsOn tasks.named("classes")
+    archiveFileName = "${modName}-d8-input.jar"
+    destinationDirectory = layout.buildDirectory.dir("d8-input")
+    from(sourceSets.main.output)
+}
+
+tasks.register("dexAndroid", Exec) {
+    group = "build"
+    description = "Converts the compiled classes into classes.dex for Android mod loading."
+
+    dependsOn tasks.named("d8InputJar")
+    onlyIf { findD8() != null }
+
+    def outDir = d8OutDir
+    outputs.dir(outDir)
+    outputs.upToDateWhen { false }
+
+    doFirst {
+        def d8 = findD8()
+        delete(outDir)
+        outDir.mkdirs()
+
+        def programZip = tasks.named("d8InputJar").get().archiveFile.get().asFile
+        def androidJar = findAndroidJar()
+
+        commandLine d8.absolutePath
+        args "--min-api", "14", "--release", "--output", outDir.absolutePath
+
+        if (androidJar != null) {
+            args "--lib", androidJar.absolutePath
+        }
+        configurations.compileClasspath.files.each { f ->
+            args "--classpath", f.absolutePath
+        }
+        args programZip.absolutePath
+    }
+}
+
+// endregion
+
+// Fails the build on unbalanced braces in bundle values: MessageFormat (bundle.format) throws
+// "Unmatched braces in the pattern" at runtime, which used to crash the game.
+tasks.register("checkBundles") {
+    group = "verification"
+    description = "Validates that bundle values have balanced { } placeholders."
+
+    def bundleDir = file("src/main/resources/bundles")
+    inputs.dir(bundleDir)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def bad = []
+
+        fileTree(bundleDir).matching { include "*.properties" }.each { f ->
+            f.withReader("UTF-8") { reader ->
+                reader.eachLine { line ->
+                    def trimmed = line.trim()
+                    if (trimmed.isEmpty() || trimmed.startsWith("#") || trimmed.startsWith("!")) return
+
+                    int eq = trimmed.indexOf('=')
+                    if (eq < 0) return
+
+                    def key = trimmed.substring(0, eq).trim()
+                    def value = trimmed.substring(eq + 1)
+
+                    int depth = 0
+                    boolean ok = true
+                    for (int i = 0; i < value.length(); i++) {
+                        char c = value.charAt(i)
+                        if (c == '{') {
+                            depth++
+                        } else if (c == '}') {
+                            if (depth == 0) {
+                                ok = false
+                                break
+                            }
+                            depth--
+                        }
+                    }
+
+                    if (!ok || depth != 0) bad << (f.name + " :: " + key)
+                }
+            }
+        }
+
+        if (!bad.isEmpty()) {
+            throw new GradleException("Unbalanced braces in bundle values: " + bad)
+        }
+    }
+}
+
+// Every translated bundle must define every key of the default bundle, otherwise the game
+// silently falls back to raw keys for those entries.
+tasks.register("checkI18n") {
+    group = "verification"
+    description = "Checks that every bundle file defines the same keys as bundle.properties."
+
+    def bundleDir = file("src/main/resources/bundles")
+    inputs.dir(bundleDir)
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def files = fileTree(bundleDir).matching { include "*.properties" }.files.sort { it.name }
+        def defaultFile = files.find { it.name == "bundle.properties" }
+        if (defaultFile == null) throw new GradleException("bundle.properties is missing")
+
+        def readKeys = { File f ->
+            def keys = new TreeSet<String>()
+            f.withReader("UTF-8") { reader ->
+                reader.eachLine { line ->
+                    def trimmed = line.trim()
+                    if (trimmed.isEmpty() || trimmed.startsWith("#") || trimmed.startsWith("!")) return
+                    int eq = trimmed.indexOf('=')
+                    if (eq <= 0) return
+                    keys.add(trimmed.substring(0, eq).trim())
+                }
+            }
+            return keys
+        }
+
+        def base = readKeys(defaultFile)
+        def problems = []
+
+        files.each { f ->
+            if (f == defaultFile) return
+            def keys = readKeys(f)
+            def missing = base.findAll { !keys.contains(it) }
+            def extra = keys.findAll { !base.contains(it) }
+            if (!missing.isEmpty()) problems << (f.name + " missing " + missing)
+            if (!extra.isEmpty()) problems << (f.name + " unknown " + extra)
+        }
+
+        if (!problems.isEmpty()) {
+            throw new GradleException("Bundle i18n mismatch: " + problems)
+        }
+    }
+}
+
+// region artifacts
+
+tasks.register("buildMod", Jar) {
+    group = "build"
+    description = "Builds the installable mod jar (classes + dex + bundles + metadata)."
+    dependsOn tasks.named("classes")
+    dependsOn tasks.named("dexAndroid")
+    dependsOn tasks.named("checkBundles")
+    dependsOn tasks.named("checkI18n")
+
+    archiveFileName = artifactFileName
+    destinationDirectory = new File(rootDir, "../构建/${modName}")
+
+    from(sourceSets.main.output)
+    from(d8OutDir) {
+        include "classes.dex"
+    }
+    from(projectDir) {
+        include "mod.json"
+        include "mod.hjson"
+    }
+}
+
+jar {
+    dependsOn tasks.named("dexAndroid")
+    archiveFileName = artifactFileName
+    from(sourceSets.main.output)
+    from(d8OutDir) {
+        include "classes.dex"
+    }
+    from(projectDir) {
+        include "mod.json"
+        include "mod.hjson"
+    }
+}
+
+tasks.register("dist", Copy) {
+    group = "build"
+    description = "Copies the installable mod jar into dist/."
+    dependsOn tasks.named("buildMod")
+    from(tasks.named("buildMod").flatMap { it.archiveFile })
+    into(new File(projectDir, "dist"))
+    doNotTrackState("Convenience copy for release artifacts.")
+}
+
+// endregion

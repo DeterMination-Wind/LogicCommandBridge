@@ -1,0 +1,11 @@
+{
+  "name": "LogicCommandBridge-dev",
+  "displayName": "Logic Command Bridge / 逻辑指挥桥",
+  "author": "DeterMination",
+  "version": "0.0.0",
+  "minGameVersion": 157,
+  "description": "Bind a logic processor, then every RTS unit command is compiled into mlog and executed by that processor. / 先选定一台处理器，之后每次 RTS 控兵指令都会被编译成 mlog 并立即执行。",
+  "main": "logiccmd.LogicCommandMod",
+  "java": true,
+  "hidden": true
+}
